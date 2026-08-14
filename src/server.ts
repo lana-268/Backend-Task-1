@@ -1,6 +1,8 @@
 import express, { type Request, type Response } from "express";
 
 import { errorHandler } from "./middleware/errorHandler.ts";
+import { bookingsRouter } from "./routes/bookings.ts";
+import { eventsRouter } from "./routes/events.ts";
 import { venuesRouter } from "./routes/venues.ts";
 
 const port = 3011;
@@ -13,6 +15,8 @@ app.get("/health", (_request: Request, response: Response) => {
 });
 
 app.use("/v1/venues", venuesRouter);
+app.use("/v1/events", eventsRouter);
+app.use("/v1/bookings", bookingsRouter);
 
 app.use(errorHandler);
 

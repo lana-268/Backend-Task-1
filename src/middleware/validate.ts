@@ -11,7 +11,7 @@ export function validate(schema: ZodSchema) {
       if (!result.success) {
         const firstError = result.error.issues[0];
         const message = firstError ? firstError.message : "Validation failed";
-        throw new HttpError(400, message);
+        throw new HttpError(400, message, result.error.issues);
       }
 
       request.body = result.data;
@@ -30,7 +30,7 @@ export function validateQuery(schema: ZodSchema) {
       if (!result.success) {
         const firstError = result.error.issues[0];
         const message = firstError ? firstError.message : "Validation failed";
-        throw new HttpError(400, message);
+        throw new HttpError(400, message, result.error.issues);
       }
 
       response.locals.query = result.data;
@@ -49,7 +49,7 @@ export function validateParams(schema: ZodSchema) {
       if (!result.success) {
         const firstError = result.error.issues[0];
         const message = firstError ? firstError.message : "Validation failed";
-        throw new HttpError(400, message);
+        throw new HttpError(400, message, result.error.issues);
       }
 
       response.locals.params = result.data;
