@@ -60,7 +60,7 @@ npx prisma db seed
 npm run dev
 ```
 
-Run `node scripts/parallel-bookings.ts` in another terminal for the seeded capacity-five event: it should report 5 x 201 and 15 x 409. The bookings-by-user proof query is `SELECT * FROM "Booking" WHERE "userId" = $1 ORDER BY "createdAt" DESC`, supported by `Booking_userId_createdAt_idx`; record real before/after `EXPLAIN ANALYZE` output in the PR after executing it locally.
+Run `node scripts/parallel-bookings.ts` in another terminal for the seeded capacity-five event: it should report 5 x 201 and 15 x 409. The bookings-by-user proof query is `SELECT * FROM "Booking" WHERE "userId" = $1 ORDER BY "createdAt" DESC LIMIT 20`, supported by `Booking_userId_createdAt_idx`; the measured before/after plans are recorded in the Session 3 PR description.
 
 **Your booking service checked capacity before every insert and the event still oversold: why did the check fail, and what property of the fix makes overselling impossible?** The separate concurrent checks let requests observe the same remaining capacity, while a Serializable transaction makes the check and write atomic and serializable so they cannot all commit an oversell.
 
