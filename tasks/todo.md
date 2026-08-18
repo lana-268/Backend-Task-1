@@ -1,18 +1,8 @@
-# Session 2 implementation plan
+# Session 3 implementation plan
 
-- [x] Inspect the existing architecture, domain types, stores, middleware, and checks.
-- [x] Add the bookings resource through routes, controller, and service layers.
-- [x] Validate booking creation with a strict request-body schema.
-- [x] Enforce the duplicate booking rule for every booking status.
-- [x] Enforce capacity using confirmed bookings only.
-- [x] Add retrieval of an individual booking.
-- [x] Add cancellation that retains the booking record.
-- [x] Add event pagination with page, limit, and response metadata.
-- [x] Add exact venue filtering for events.
-- [x] Add inclusive from/to event date filtering.
-- [x] Apply event filtering before calculating totals and paginating.
-- [x] Validate all bodies, parameters, and query strings with shared middleware.
-- [x] Complete the API consistency and centralized error-handling pass.
-- [x] Test booking and event API cases manually and with configured checks.
-- [x] Verify the final architecture and error-response constraints.
-- [x] Update this checklist and commit the completed implementation.
+- [ ] Add Prisma 7 configuration, Postgres Docker setup, schema, migration, and environment documentation.
+- [ ] Replace the in-memory event store with Prisma-backed event repository operations, including list filters and pagination.
+- [ ] Add Prisma-backed booking creation in a serializable transaction, cancellation, retrieval, duplicate handling, and rebooking.
+- [ ] Add an idempotent seed with fixture users, events, bookings, and a capacity-five concurrency event.
+- [ ] Add the parallel-bookings proof script and document the index investigation and fresh-clone setup.
+- [ ] Run formatting, type checking, linting, and available runtime/database verification; check off completed items.
