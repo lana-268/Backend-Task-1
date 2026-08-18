@@ -47,6 +47,23 @@ this is the real gate; run it before every commit.
 **`npm run lint`** - runs ESLint (flat config, typescript-eslint) over the
 project. Preconfigured from day one; CI starts enforcing it in Session 6.
 
+## Session 3: PostgreSQL bookings
+
+Events and bookings now use Prisma 7 and PostgreSQL. Event listing supports validated pagination and filtering; booking creation uses a Serializable transaction, soft cancellation, and cancelled-row reactivation.
+
+```bash
+cp .env.example .env
+npm install
+docker compose up -d
+npx prisma migrate dev
+npx prisma db seed
+npm run dev
+```
+
+Run `node scripts/parallel-bookings.ts` in another terminal for the seeded capacity-five event: it should report 5 x 201 and 15 x 409. The bookings-by-user proof query is `SELECT * FROM "Booking" WHERE "userId" = $1 ORDER BY "createdAt" DESC`, supported by `Booking_userId_createdAt_idx`; record real before/after `EXPLAIN ANALYZE` output in the PR after executing it locally.
+
+**Your booking service checked capacity before every insert and the event still oversold: why did the check fail, and what property of the fix makes overselling impossible?** The separate concurrent checks let requests observe the same remaining capacity, while a Serializable transaction makes the check and write atomic and serializable so they cannot all commit an oversell.
+
 ## Homework is submitted as a Pull Request
 
 Every session's homework lands as **one PR** to your own `eventify` repo:
