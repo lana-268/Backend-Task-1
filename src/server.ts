@@ -1,11 +1,12 @@
 import express, { type Request, type Response } from "express";
 
+import { config } from "./config.ts";
 import { errorHandler } from "./middleware/errorHandler.ts";
 import { bookingsRouter } from "./routes/bookings.ts";
 import { eventsRouter } from "./routes/events.ts";
 import { venuesRouter } from "./routes/venues.ts";
 
-const port = 3011;
+const port = config.PORT;
 const app = express();
 
 app.use(express.json());
