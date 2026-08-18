@@ -1,0 +1,10 @@
+{
+  "eventId": "00000000-0000-4000-8000-000000000005",
+  "capacity": 5,
+  "users": [
+    { "id": "parallel-user-1", "token": "" }, { "id": "parallel-user-2", "token": "" }, { "id": "parallel-user-3", "token": "" }, { "id": "parallel-user-4", "token": "" }, { "id": "parallel-user-5", "token": "" },
+    { "id": "parallel-user-6", "token": "" }, { "id": "parallel-user-7", "token": "" }, { "id": "parallel-user-8", "token": "" }, { "id": "parallel-user-9", "token": "" }, { "id": "parallel-user-10", "token": "" },
+    { "id": "parallel-user-11", "token": "" }, { "id": "parallel-user-12", "token": "" }, { "id": "parallel-user-13", "token": "" }, { "id": "parallel-user-14", "token": "" }, { "id": "parallel-user-15", "token": "" },
+    { "id": "parallel-user-16", "token": "" }, { "id": "parallel-user-17", "token": "" }, { "id": "parallel-user-18", "token": "" }, { "id": "parallel-user-19", "token": "" }, { "id": "parallel-user-20", "token": "" }
+  ]
+}
