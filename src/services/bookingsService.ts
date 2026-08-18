@@ -5,20 +5,19 @@ import { HttpError } from "../utils/httpError.ts";
 import { getEventById } from "./eventsService.ts";
 
 const bookingsStore = new Map<string, Booking>();
-const currentUserId = "usr-1";
 
 export interface CreateBookingInput {
   eventId: string;
 }
 
-export function createBooking(input: CreateBookingInput): Booking {
+export function createBooking(userId: string, input: CreateBookingInput): Booking {
   const event = getEventById(input.eventId);
   if (!event) {
     throw new HttpError(404, "Event not found");
   }
 
   for (const booking of bookingsStore.values()) {
-    if (booking.userId === currentUserId && booking.eventId === input.eventId) {
+    if (booking.userId === userId && booking.eventId === input.eventId) {
       throw new HttpError(409, "Booking already exists for this event");
     }
   }
@@ -33,7 +32,7 @@ export function createBooking(input: CreateBookingInput): Booking {
 
   const booking: Booking = {
     id: randomUUID(),
-    userId: currentUserId,
+    userId,
     eventId: input.eventId,
     status: "CONFIRMED",
     createdAt: new Date().toISOString(),

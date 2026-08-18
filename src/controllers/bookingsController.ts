@@ -11,8 +11,10 @@ interface BookingParams {
   id: string;
 }
 
+const currentUserId = "usr-1";
+
 export async function handleCreateBooking(request: Request, response: Response): Promise<void> {
-  const booking = createBooking(request.body as CreateBookingInput);
+  const booking = createBooking(currentUserId, request.body as CreateBookingInput);
   response.status(201).json(booking);
 }
 
