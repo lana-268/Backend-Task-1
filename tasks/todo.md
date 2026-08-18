@@ -13,5 +13,5 @@
 - [x] Enable Prisma query logging and record EXPLAIN ANALYZE before the bookings-by-user index.
 - [x] Create the appropriate bookings-by-user index and record EXPLAIN ANALYZE after it.
 - [x] Test endpoints, rebooking, capacity, duplicate handling, and parallel booking concurrency.
-- [ ] Verify a fresh-clone-equivalent setup, migrations, seed, Docker configuration, and generated Prisma files.
+- [x] Verify a fresh-clone-equivalent setup, migrations, seed, Docker configuration, and generated Prisma files.
 - [x] Update README/PR documentation and mark only verified checklist items complete.

@@ -108,3 +108,4 @@ The separate concurrent capacity checks allowed multiple requests to observe the
 - `npm run typecheck`: passed.
 - `npm run lint`: passed.
 - `npx prisma validate` and `npx prisma generate`: passed.
+- Fresh-clone-equivalent `npm install`, `npx prisma migrate dev`, `npx prisma db seed`, and `npm run dev`: passed; the generated client was recreated by `postinstall` and was not dependent on the original working directory.
