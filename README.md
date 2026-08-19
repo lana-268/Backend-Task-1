@@ -24,15 +24,16 @@ Check these off before Session 1 (they match the course pre-work email):
 git clone https://github.com/<your-username>/eventify.git
 cd eventify
 
-# 2. Install dev tooling (TypeScript, ESLint):
-npm install
-
-# 3. Create your local env file (never committed):
+# 2. Create your local env file (never committed). Prisma's config imports it
+#    explicitly; Prisma 7 does not load .env automatically:
 cp .env.example .env
+
+# 3. Install dependencies and generate the Prisma client:
+npm install
 ```
 
-There is no server yet - you write `src/server.ts` in Session 1's project
-block. Once it exists, the scripts below are your daily loop.
+Start PostgreSQL and apply the migrations before running the API; the complete
+Session 3 command sequence is below.
 
 ## Scripts
 
@@ -60,7 +61,57 @@ npx prisma db seed
 npm run dev
 ```
 
-Run `node scripts/parallel-bookings.ts` in another terminal for the seeded capacity-five event: it should report 5 x 201 and 15 x 409. The bookings-by-user proof query is `SELECT * FROM "Booking" WHERE "userId" = $1 ORDER BY "createdAt" DESC LIMIT 20`, supported by `Booking_userId_createdAt_idx`; the measured before/after plans are recorded in the Session 3 PR description.
+The Compose stack also creates a separate `sandbox` database from
+[`session-3-sandbox-seed.sql`](session-3-sandbox-seed.sql) the first time the PostgreSQL
+volume is initialized. Prisma continues to use only the `eventify` database.
+Connect to the practice database and run the read-only exercises with:
+
+```powershell
+docker compose exec postgres psql -U eventify -d sandbox
+Get-Content -Raw sql/session-3-queries.sql | docker compose exec -T postgres psql -U eventify -d sandbox
+```
+
+If the PostgreSQL volume already existed before the sandbox mount was added,
+run the initializer once without deleting application data:
+
+```bash
+docker compose exec postgres psql -U eventify -d eventify -f /docker-entrypoint-initdb.d/10-sandbox-seed.sql
+```
+
+To recreate both databases from an empty volume, use `docker compose down -v`
+before `docker compose up -d`. This deletes all local PostgreSQL data,
+including the Prisma-managed `eventify` database, so use the one-time command
+above when application data must be preserved.
+
+To verify the initial teaching fixtures before running the index demo:
+
+```powershell
+Get-Content -Raw sql/verify-sandbox.sql | docker compose exec -T postgres psql -U eventify -d sandbox
+Get-Content -Raw sql/session-3-index-demo.sql | docker compose exec -T postgres psql -U eventify -d sandbox
+```
+
+The index demo deliberately drops and recreates `bookings_user_id_idx`. The
+initial schema has only the ordered unique constraint on `(event_id, user_id)`;
+the second plan may use an index scan or an index-based bitmap plan.
+
+### Transaction exercise
+
+Open two terminals with the first connection command above. In terminal 1:
+
+```sql
+BEGIN;
+UPDATE events SET capacity = capacity + 25 WHERE title = 'TS Conf';
+SELECT title, capacity FROM events WHERE title = 'TS Conf';
+```
+
+Run the same `SELECT` in terminal 2: it still sees the committed old value.
+Run `COMMIT;` in terminal 1, then repeat the terminal 2 query to see the new
+value. For rollback practice, record the current capacity, repeat `BEGIN` and
+`UPDATE`, then run `ROLLBACK;`; both terminals will retain the recorded value.
+The seed value is 100; after the commit demonstration you can restore it with
+`UPDATE events SET capacity = 100 WHERE title = 'TS Conf';`.
+
+Run `node scripts/parallel-bookings.ts` in another terminal for the freshly seeded capacity-five event: it should report 5 x 201 and 15 x 409. The script exits unsuccessfully if any response differs from that result. The bookings-by-user proof query is `SELECT * FROM "Booking" WHERE "userId" = $1 ORDER BY "createdAt" DESC LIMIT 20`, supported by `Booking_userId_createdAt_idx`; the measured before/after plans are recorded in the Session 3 PR description.
 
 **Your booking service checked capacity before every insert and the event still oversold: why did the check fail, and what property of the fix makes overselling impossible?** The separate concurrent checks let requests observe the same remaining capacity, while a Serializable transaction makes the check and write atomic and serializable so they cannot all commit an oversell.
 

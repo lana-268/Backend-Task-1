@@ -23,10 +23,23 @@ const events = [
   { id: parallelEventId, title: "Parallel Booking Proof", description: "Capacity-five concurrency fixture.", venue: "Test Lab", startsAt: new Date("2026-11-01T09:00:00.000Z"), capacity: 5, priceCents: 0 },
 ];
 
+const bookings = [
+  { userId: "usr-3", eventId: events[0]!.id, status: "CONFIRMED" as const },
+  { userId: "parallel-user-1", eventId: events[1]!.id, status: "CANCELLED" as const },
+  { userId: "parallel-user-2", eventId: events[2]!.id, status: "WAITLISTED" as const },
+];
+
 async function main(): Promise<void> {
   for (const user of users) await prisma.user.upsert({ where: { id: user.id }, update: user, create: user });
   for (const event of events) await prisma.event.upsert({ where: { id: event.id }, update: { ...event, organizerId: "usr-1" }, create: { ...event, organizerId: "usr-1" } });
-  await prisma.booking.upsert({ where: { userId_eventId: { userId: "usr-3", eventId: events[0].id } }, update: { status: "CONFIRMED" }, create: { userId: "usr-3", eventId: events[0].id, status: "CONFIRMED" } });
+  for (const booking of bookings) {
+    const { userId, eventId } = booking;
+    await prisma.booking.upsert({
+      where: { userId_eventId: { userId, eventId } },
+      update: { status: booking.status },
+      create: booking,
+    });
+  }
 }
 
 try {

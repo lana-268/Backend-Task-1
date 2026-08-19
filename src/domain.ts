@@ -38,10 +38,3 @@ export interface Venue {
   contactEmail: string;
   createdAt: string;
 }
-
-export function findById<T extends { id: string }>(
-  records: readonly T[],
-  id: string,
-): T | undefined {
-  return records.find((record) => record.id === id);
-}

@@ -6,8 +6,9 @@
 - Preserved the route/controller/service layering while adding event CRUD, validated pagination, exact venue filtering, and inclusive date filtering.
 - Added Serializable booking transactions with confirmed-only capacity checks, cancelled-row reactivation, duplicate conflict handling, P2002-to-409 mapping, and bounded P2034 retries.
 - Added booking retrieval and soft cancellation without deleting booking rows.
-- Added an idempotent seed with 23 users, all required roles, five events, sample bookings, and a capacity-five concurrency fixture.
+- Added an idempotent seed with 23 users, all required roles, five events, three sample bookings, and a capacity-five concurrency fixture.
 - Enabled Prisma query logging and added an ordered `(userId, createdAt DESC)` index for newest-first bookings-by-user queries.
+- Added a separate `sandbox` database on the same PostgreSQL service, with 2,000 users, 220 events, 10,500 bookings, intentional zero-booking and oversold cases, SQL exercises, and the required `(event_id, user_id)` index-order demonstration.
 
 ## How to run from a fresh clone
 
@@ -20,6 +21,14 @@ npx prisma db seed
 npm run dev
 ```
 
+The sandbox initializer is mounted into `/docker-entrypoint-initdb.d/` and
+runs only when the PostgreSQL volume is first created. On an existing volume,
+initialize it without removing the `eventify` data:
+
+```bash
+docker compose exec postgres psql -U eventify -d eventify -f /docker-entrypoint-initdb.d/10-sandbox-seed.sql
+```
+
 In another terminal, run:
 
 ```bash
@@ -29,8 +38,8 @@ node scripts/parallel-bookings.ts
 The verified parallel result was:
 
 ```text
-5 × 201
-15 × 409
+5 x 201
+15 x 409
 ```
 
 The database verification query returned five confirmed rows and no additional statuses:
@@ -100,7 +109,7 @@ The separate concurrent capacity checks allowed multiple requests to observe the
 ## Verification
 
 - `npx prisma migrate dev`: passed against PostgreSQL 17.
-- `npx prisma db seed` twice: passed with stable counts of 23 users, five events, and one sample booking.
+- `npx prisma db seed` twice: previously passed against the isolated class database; the seed uses upserts for 23 users, five events, and three sample bookings.
 - Event pagination, filtering, and CRUD: passed.
 - Booking create, get, duplicate conflict, cancel, same-row rebook, full-event conflict, unknown ID, and WAITLISTED preservation: passed.
 - Parallel booking proof: five `201` responses and fifteen `409` responses; the database contained exactly five confirmed rows.
@@ -108,4 +117,18 @@ The separate concurrent capacity checks allowed multiple requests to observe the
 - `npm run typecheck`: passed.
 - `npm run lint`: passed.
 - `npx prisma validate` and `npx prisma generate`: passed.
-- Fresh-clone-equivalent `npm install`, `npx prisma migrate dev`, `npx prisma db seed`, and `npm run dev`: passed; the generated client was recreated by `postinstall` and was not dependent on the original working directory.
+- A clean-copy `npm ci` regenerated the ignored Prisma client through `postinstall`; typecheck, lint, and Prisma validation then passed without using files from the original working directory.
+
+### Sandbox verification in the current environment
+
+- `npm run typecheck`, `npm run lint`, `npm test`, `npx prisma validate`, and `npx prisma generate`: passed on 2026-08-19.
+- Docker is not installed in the current environment, so the Compose command itself could not run. The initializer mount was reviewed against the existing PostgreSQL 17 service configuration, and all database checks below ran on an isolated native PostgreSQL 17 cluster instead.
+- The initializer and `sql/verify-sandbox.sql` passed with exactly 2,000 users, 220 events, 10,500 bookings, ten zero-booking events, one `TS Conf`, two intentional oversold events, the ordered unique constraint, and no initial standalone `user_id` index.
+- Rerunning the initializer inserted zero rows and retained the same counts, confirming idempotency.
+- The INNER JOIN returned 10,500 rows; the LEFT JOIN found ten unmatched events; HAVING returned only the two intentional oversells with fifty confirmed bookings each; and the revenue query ranked all events successfully.
+- The two-connection transaction check proved that the second connection retained capacity 100 while the first saw its uncommitted value 125, observed 125 after commit, and retained 125 after a separate update to 165 was rolled back. The fixture was restored to 100 afterward.
+- The sandbox `user_id` plan changed from a sequential scan (1.939 ms measured execution) to a bitmap index plan using `bookings_user_id_idx` (0.102 ms measured execution).
+- Prisma migrations and the application seed passed against the isolated database. Live API checks passed for duplicate conflicts, soft cancellation, same-row reactivation, full capacity, and missing event/booking responses.
+- The 20-way concurrency proof passed with five `201` responses, fifteen `409` responses, and exactly five confirmed database rows.
+- A deterministic fixture check produced 10,500 distinct `(event_id, user_id)` pairs, ten empty events, and exactly the two intended oversold events with fifty confirmed bookings each.
+- `sql/verify-sandbox.sql` provides fail-fast assertions for row counts, zero-booking events, the two oversold events, `TS Conf`, the ordered unique constraint, and the absence of the standalone `user_id` index before the index exercise.
