@@ -1,5 +1,7 @@
 import { type Event } from "../domain.ts";
+import { type AuthenticatedUser } from "../auth/accessToken.ts";
 import * as eventsRepository from "../repositories/eventsRepository.ts";
+import { HttpError } from "../utils/httpError.ts";
 
 export interface ListEventsOptions {
   page: number;
@@ -31,5 +33,26 @@ export async function listEvents(options: ListEventsOptions): Promise<PaginatedE
 }
 
 export const createEvent = eventsRepository.createEvent;
-export const updateEvent = eventsRepository.updateEvent;
-export const deleteEvent = eventsRepository.deleteEvent;
+
+async function requireEventOwner(id: string, auth: AuthenticatedUser): Promise<Event | undefined> {
+  const event = await eventsRepository.findEventById(id);
+  if (!event) return undefined;
+  if (auth.role !== "ADMIN" && event.organizerId !== auth.id) {
+    throw new HttpError(403, "Forbidden");
+  }
+  return event;
+}
+
+export async function updateEvent(
+  id: string,
+  data: Partial<eventsRepository.EventData>,
+  auth: AuthenticatedUser,
+): Promise<Event | undefined> {
+  if (!await requireEventOwner(id, auth)) return undefined;
+  return eventsRepository.updateEvent(id, data);
+}
+
+export async function deleteEvent(id: string, auth: AuthenticatedUser): Promise<Event | undefined> {
+  if (!await requireEventOwner(id, auth)) return undefined;
+  return eventsRepository.deleteEvent(id);
+}

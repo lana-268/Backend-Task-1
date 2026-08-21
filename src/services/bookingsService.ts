@@ -1,4 +1,5 @@
 import { type Booking } from "../domain.ts";
+import { type AuthenticatedUser } from "../auth/accessToken.ts";
 import { prisma } from "../lib/prisma.ts";
 import { cancelBookingById, findBookingById } from "../repositories/bookingsRepository.ts";
 import { HttpError } from "../utils/httpError.ts";
@@ -87,16 +88,22 @@ export async function createBooking(userId: string, input: CreateBookingInput): 
   throw new HttpError(409, "Booking could not be completed");
 }
 
-export async function getBookingById(id: string): Promise<Booking> {
+export async function getBookingById(id: string, auth: AuthenticatedUser): Promise<Booking> {
   const booking = await findBookingById(id);
   if (!booking) {
     throw new HttpError(404, "Booking not found");
   }
+  if (auth.role !== "ADMIN" && booking.userId !== auth.id) {
+    throw new HttpError(403, "Forbidden");
+  }
   return booking;
 }
 
-export async function cancelBooking(id: string): Promise<Booking> {
-  const booking = await cancelBookingById(id);
+export async function cancelBooking(id: string, auth: AuthenticatedUser): Promise<Booking> {
+  const booking = await findBookingById(id);
   if (!booking) throw new HttpError(404, "Booking not found");
-  return booking;
+  if (booking.userId !== auth.id) throw new HttpError(403, "Forbidden");
+  const cancelled = await cancelBookingById(id);
+  if (!cancelled) throw new HttpError(404, "Booking not found");
+  return cancelled;
 }

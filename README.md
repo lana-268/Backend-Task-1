@@ -129,3 +129,17 @@ Every session's homework lands as **one PR** to your own `eventify` repo:
 At the start of each session one function from someone's PR is picked at
 random and its author walks the class through it, line by line. Any function
 in your PR can be that function.
+
+## Session 4: Authentication and authorization
+
+Event discovery (`GET /v1/events` and `GET /v1/events/:id`) remains public.
+Mutations, bookings, and venue routes use short-lived HS256 bearer access
+tokens, role checks, and resource ownership checks. Login returns the access
+token in JSON and sets a seven-day opaque refresh token in a Secure,
+HttpOnly, SameSite=Strict cookie scoped to `/v1/auth/refresh`; the database
+stores only its SHA-256 hash and every refresh rotates it atomically.
+
+The seeded Session 4 accounts share the local-only password `Eventify123!`.
+See [`docs/session-4-pr-description.md`](docs/session-4-pr-description.md) for
+the route-policy rationale, OWASP audit triage, compatibility note, and
+verification checklist.
