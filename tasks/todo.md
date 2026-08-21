@@ -19,4 +19,4 @@
 
 - [x] Add Supertest coverage for the policy matrix, two-organizer BOLA denial, refresh rotation, replay denial, and cookie attributes.
 - [x] Document the public-route rationale, security-audit prompt and triage, compatibility choices, verification commands, and exit ticket.
-- [ ] Run Prisma validation/generation, typecheck, lint, and tests; review the final diff.
+- [x] Run Prisma validation/generation, typecheck, lint, and tests; review the final diff.
